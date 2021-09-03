@@ -2,15 +2,12 @@ module.exports = function solveSudoku(matrix) {
   const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 
-  let copyMatrix;
   let matrixSolved = false;
-  let step = 1;
-
   function checkMatrix() {
     let checkingArr = null;
-    for (let i = 0; i < copyMatrix.length; i++) {
-      for (let j = 0; j < copyMatrix.length; j++) {
-        if (copyMatrix[i][j] === 0) {
+    for (let i = 0; i < matrix.length; i++) {
+      for (let j = 0; j < matrix.length; j++) {
+        if (matrix[i][j] === 0) {
           checkingArr += 1;
         }
       }
@@ -53,47 +50,284 @@ module.exports = function solveSudoku(matrix) {
       default:
         break;
     }
-    return square;
+
+    let firstPart = square.slice(0, 3);
+    let secondPart = square.slice(6, 9);
+    let reverseMid = square.slice(3, 6).reverse();
+    return [...firstPart, ...reverseMid, ...secondPart];
   }
 
-  function getSolution(nextStep) {
+  function getSolution() {
+    let isChange = false;
+    for (let i = 0; i < matrix.length; i++) {
 
-    for (let i = 0; i < copyMatrix.length; i++) {
-      let isChange = false;
+      if (isChange) {
+        i = 0;
+        isChange = false;
+      }
 
-      for (let j = 0; j < copyMatrix.length; j++) {
+      for (let j = 0; j < matrix.length; j++) {
 
-        if (isChange) {
-          i = -1;
-          j = -1;
-          break;
-        }
 
-        if (copyMatrix[i][j] === 0) {
-          let horizontal = copyMatrix[i];
+        if (matrix[i][j] === 0) {
+          const getVertical = (col, line) => matrix.forEach(subArr => line.push(subArr[col]));
+          let horizontal = matrix[i];
           let vertical = [];
+          getVertical(j, vertical);
           let currentSquare = getSquare(i, j);
+          let currentSquareLength = currentSquare.filter(e => e !== 0).length;
+          let currentVerticalLength = vertical.filter(e => e !== 0).length;
+          let currentHorizontalLength = horizontal.filter(e => e !== 0).length;
 
-          copyMatrix.forEach(subArr => vertical.push(subArr[j]));
+          // находим индекс текущего элемента в блоке
+          function findCurrentIndex() {
+            matrix[i][j] = 555;
+            currentSquare = getSquare(i, j);
+            let idxOfEl = currentSquare.findIndex(el => el === 555);
+            matrix[i][j] = 0;
+            currentSquare = getSquare(i, j);
+            return idxOfEl;
+          }
 
-          for (let k = nextStep; k <= DIGITS.length; k++) {
-            if ((!horizontal.includes(k) && !vertical.includes(k) && !currentSquare.includes(k))) {
-              copyMatrix[i][j] = k;
+
+          for (let k = 1; k <= DIGITS.length; k++) {
+
+            if ((!horizontal.includes(k) && !vertical.includes(k) && !currentSquare.includes(k))
+              && (currentSquareLength === 8 || currentVerticalLength === 8 || currentHorizontalLength === 8)) {
+              matrix[i][j] = k;
               isChange = true;
               break;
             }
+
+            let idxOfEl = findCurrentIndex();
+            let fuseBox;  // только для первых проходок когда не достаточно путей (трохи костыль)
+            if (idxOfEl === 0) {
+              fuseBox = true
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i + 1];
+              let h3 = matrix[i + 2];
+              let h4 = matrix[i - 1];
+              getVertical(j + 1, v2);
+              getVertical(j + 2, v3);
+              if ((v2.includes(k) || currentSquare[1] !== 0)
+                && (v3.includes(k) || currentSquare[2] !== 0)
+                && (h2.includes(k) || currentSquare[5] !== 0)
+                && (h3.includes(k) || currentSquare[6] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)
+                && (currentSquareLength >= 5 && fuseBox)) {
+                matrix[i][j] = k;
+                isChange = true;
+                fuseBox = false;
+                break;
+              }
+
+              if ((v2.includes(k) || currentSquare[1] !== 0)
+                && (v3.includes(k) || currentSquare[2] !== 0)
+                && (h2.includes(k) || currentSquare[5] !== 0)
+                && (h3.includes(k) || currentSquare[6] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)
+                && !fuseBox) {
+                matrix[i][j] = k;
+                isChange = true;
+                fuseBox = false;
+                break;
+              }
+
+              if ((v2.includes(k) || currentSquare[1] !== 0)
+                && (v3.includes(k) || currentSquare[2] !== 0)
+                && (h2.includes(k) || currentSquare[5] !== 0)
+                && (h3.includes(k) || currentSquare[6] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)
+                && h4 !== undefined) {
+                matrix[i][j] = k;
+                isChange = true;
+                fuseBox = false;
+                break;
+              }
+
+
+            }
+
+            if (idxOfEl === 1) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i + 1];
+              let h3 = matrix[i + 2];
+              getVertical(j - 1, v2);
+              getVertical(j + 1, v3);
+              if ((v2.includes(k) || currentSquare[0] !== 0)
+                && (v3.includes(k) || currentSquare[2] !== 0)
+                && (h2.includes(k) || currentSquare[4] !== 0)
+                && (h3.includes(k) || currentSquare[7] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+            }
+
+            if (idxOfEl === 2) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i + 1];
+              let h3 = matrix[i + 2];
+              getVertical(j - 1, v2);
+              getVertical(j - 2, v3);
+              if ((v2.includes(k) || currentSquare[1] !== 0)
+                && (v3.includes(k) || currentSquare[0] !== 0)
+                && (h2.includes(k) || currentSquare[3] !== 0)
+                && (h3.includes(k) || currentSquare[8] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+
+            if (idxOfEl === 3) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i + 1];
+              getVertical(j - 1, v2);
+              getVertical(j - 2, v3);
+              if ((v2.includes(k) || currentSquare[4] !== 0)
+                && (v3.includes(k) || currentSquare[5] !== 0)
+                && (h2.includes(k) || currentSquare[2] !== 0)
+                && (h3.includes(k) || currentSquare[8] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+
+            if (idxOfEl === 4) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i + 1];
+              getVertical(j - 1, v2);
+              getVertical(j + 1, v3);
+              if ((v2.includes(k) || currentSquare[5] !== 0)
+                && (v3.includes(k) || currentSquare[3] !== 0)
+                && (h2.includes(k) || currentSquare[1] !== 0)
+                && (h3.includes(k) || currentSquare[7] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+
+            if (idxOfEl === 5) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i + 1];
+              getVertical(j + 1, v2);
+              getVertical(j + 2, v3);
+              if ((v2.includes(k) || currentSquare[4] !== 0)
+                && (v3.includes(k) || currentSquare[3] !== 0)
+                && (h2.includes(k) || currentSquare[0] !== 0)
+                && (h3.includes(k) || currentSquare[6] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+            if (idxOfEl === 6) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i - 2];
+              getVertical(j + 1, v2);
+              getVertical(j + 2, v3);
+              if ((v2.includes(k) || currentSquare[7] !== 0)
+                && (v3.includes(k) || currentSquare[8] !== 0)
+                && (h2.includes(k) || currentSquare[5] !== 0)
+                && (h3.includes(k) || currentSquare[0] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+            if (idxOfEl === 7) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i - 2];
+              getVertical(j - 1, v2);
+              getVertical(j + 1, v3);
+              if ((v2.includes(k) || currentSquare[6] !== 0)
+                && (v3.includes(k) || currentSquare[8] !== 0)
+                && (h2.includes(k) || currentSquare[4] !== 0)
+                && (h3.includes(k) || currentSquare[1] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+            if (idxOfEl === 8) {
+              let v2 = [];
+              let v3 = [];
+              let h2 = matrix[i - 1];
+              let h3 = matrix[i - 2];
+              getVertical(j - 1, v2);
+              getVertical(j - 2, v3);
+              if ((v2.includes(k) || currentSquare[7] !== 0)
+                && (v3.includes(k) || currentSquare[6] !== 0)
+                && (h2.includes(k) || currentSquare[3] !== 0)
+                && (h3.includes(k) || currentSquare[2] !== 0)
+                && !currentSquare.includes(k)
+                && !vertical.includes(k)
+                && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+            }
+
+
           }
+
         }
+
+      }
+      checkMatrix();
+      if (i === 8 && !matrixSolved) {
+        i = 0;
       }
     }
-    checkMatrix();
   }
 
-  while (!matrixSolved && step <= 9) {
-    copyMatrix = matrix.map(el => [...el]);
-    getSolution(step);
-    step++;
+  if (!matrixSolved) {
+    getSolution();
   }
-
-  return copyMatrix;
+  return matrix;
 }
