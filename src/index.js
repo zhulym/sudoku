@@ -85,6 +85,9 @@ module.exports = function solveSudoku(matrix) {
           }
 
           for (let k = 1; k <= 9; k++) {      // проверки в зависимости от положения числа в подмассиве
+            // ===================================== первая проверка ===================================//
+            let tempHorLines = [];
+            let tempVerLines = [];
             if ((!horizontal.includes(k) && !vertical.includes(k) && !currentSquare.includes(k))
               && (currentSquareLength === 8 || currentVerticalLength === 8 || currentHorizontalLength === 8)) {
               matrix[i][j] = k;
@@ -92,7 +95,49 @@ module.exports = function solveSudoku(matrix) {
               break;
             }
 
+            if (stepsToEndChecking === 5) {
+              if ((!horizontal.includes(k) && !vertical.includes(k) && !currentSquare.includes(k))
+                && (currentSquareLength >= 5 || currentVerticalLength >= 5 || currentHorizontalLength >= 5)) {
+                matrix[i][j] = k;
+                isChange = true;
+                stepsToEndChecking = 0;
+                break;
+              }
+            }
+
             let idxOfEl = findCurrentIndex();
+            function checkVerticalLines() {
+              tempHorLines = [];
+              if (currentVerticalLength >= 6) {
+                matrix[i][j] = 555;                   // временно меняем чтобы не путать нули в линии
+                vertical = [];
+                getVertical(j, vertical);             // переопределяем текущую вертикальную линию
+                for (let w = 0; w < 9; w++) {
+                  if (vertical[w] === 0 && vertical[w] !== matrix[i][j]) {
+                    tempHorLines.push(matrix[w]);
+                  }
+                }
+                matrix[i][j] = 0;                 //возвращаем как было до
+                vertical = [];
+                getVertical(j, vertical);
+              }
+            }
+            function checkHorizontalLines() {
+              tempVerLines = [];
+              if (currentHorizontalLength >= 6) {
+                matrix[i][j] = 555;                   // временно меняем чтобы не путать нули в линии
+                horizontal = matrix[i];           // переопределяем текущую вертикальную линию
+                for (let w = 0; w < 9; w++) {
+                  if (horizontal[w] === 0 && horizontal[w] !== matrix[i][j]) {
+                    let tempLine = [];
+                    getVertical(w, tempLine);
+                    tempVerLines.push(tempLine);
+                  }
+                }
+                matrix[i][j] = 0;                 //возвращаем как было до
+                horizontal = matrix[i];
+              }
+            }
 
             if (idxOfEl === 0) {
               let v2 = [];
@@ -102,6 +147,8 @@ module.exports = function solveSudoku(matrix) {
               let h4 = matrix[i - 1];
               getVertical(j + 1, v2);
               getVertical(j + 2, v3);
+              // ===================================== вторая проверка ===================================//
+
               if ((v2.includes(k) || currentSquare[1] !== 0)
                 && (v3.includes(k) || currentSquare[2] !== 0)
                 && (h2.includes(k) || currentSquare[5] !== 0)
@@ -114,7 +161,24 @@ module.exports = function solveSudoku(matrix) {
                 isChange = true;
                 break;
               }
+
+              // ===================================== третья проверка на вертикали ===================================//
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
             }
+
+
             if (idxOfEl === 1) {
               let v2 = [];
               let v3 = [];
@@ -122,6 +186,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i + 2];
               getVertical(j - 1, v2);
               getVertical(j + 1, v3);
+
               if ((v2.includes(k) || currentSquare[0] !== 0)
                 && (v3.includes(k) || currentSquare[2] !== 0)
                 && (h2.includes(k) || currentSquare[4] !== 0)
@@ -129,6 +194,20 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
                 matrix[i][j] = k;
                 isChange = true;
                 break;
@@ -142,6 +221,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i + 2];
               getVertical(j - 1, v2);
               getVertical(j - 2, v3);
+
               if ((v2.includes(k) || currentSquare[1] !== 0)
                 && (v3.includes(k) || currentSquare[0] !== 0)
                 && (h2.includes(k) || currentSquare[3] !== 0)
@@ -153,7 +233,23 @@ module.exports = function solveSudoku(matrix) {
                 isChange = true;
                 break;
               }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
             }
+
+
             if (idxOfEl === 3) {
               let v2 = [];
               let v3 = [];
@@ -161,6 +257,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i + 1];
               getVertical(j - 1, v2);
               getVertical(j - 2, v3);
+
               if ((v2.includes(k) || currentSquare[4] !== 0)
                 && (v3.includes(k) || currentSquare[5] !== 0)
                 && (h2.includes(k) || currentSquare[2] !== 0)
@@ -168,6 +265,20 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
                 matrix[i][j] = k;
                 isChange = true;
                 break;
@@ -180,6 +291,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i + 1];
               getVertical(j - 1, v2);
               getVertical(j + 1, v3);
+
               if ((v2.includes(k) || currentSquare[5] !== 0)
                 && (v3.includes(k) || currentSquare[3] !== 0)
                 && (h2.includes(k) || currentSquare[1] !== 0)
@@ -191,7 +303,23 @@ module.exports = function solveSudoku(matrix) {
                 isChange = true;
                 break;
               }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
             }
+
+
             if (idxOfEl === 5) {
               let v2 = [];
               let v3 = [];
@@ -199,6 +327,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i + 1];
               getVertical(j + 1, v2);
               getVertical(j + 2, v3);
+
               if ((v2.includes(k) || currentSquare[4] !== 0)
                 && (v3.includes(k) || currentSquare[3] !== 0)
                 && (h2.includes(k) || currentSquare[0] !== 0)
@@ -206,6 +335,20 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
                 matrix[i][j] = k;
                 isChange = true;
                 break;
@@ -218,6 +361,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i - 2];
               getVertical(j + 1, v2);
               getVertical(j + 2, v3);
+
               if ((v2.includes(k) || currentSquare[7] !== 0)
                 && (v3.includes(k) || currentSquare[8] !== 0)
                 && (h2.includes(k) || currentSquare[5] !== 0)
@@ -225,6 +369,20 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
                 matrix[i][j] = k;
                 isChange = true;
                 break;
@@ -237,6 +395,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i - 2];
               getVertical(j - 1, v2);
               getVertical(j + 1, v3);
+
               if ((v2.includes(k) || currentSquare[6] !== 0)
                 && (v3.includes(k) || currentSquare[8] !== 0)
                 && (h2.includes(k) || currentSquare[4] !== 0)
@@ -244,6 +403,20 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
                 matrix[i][j] = k;
                 isChange = true;
                 break;
@@ -256,6 +429,7 @@ module.exports = function solveSudoku(matrix) {
               let h3 = matrix[i - 2];
               getVertical(j - 1, v2);
               getVertical(j - 2, v3);
+
               if ((v2.includes(k) || currentSquare[7] !== 0)
                 && (v3.includes(k) || currentSquare[6] !== 0)
                 && (h2.includes(k) || currentSquare[3] !== 0)
@@ -267,20 +441,35 @@ module.exports = function solveSudoku(matrix) {
                 isChange = true;
                 break;
               }
+
+              checkVerticalLines();
+              if (tempHorLines.every(el => el.includes(k)) && tempHorLines.length !== 0 && !vertical.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
+
+              checkHorizontalLines();
+              if (tempVerLines.every(el => el.includes(k)) && tempVerLines.length !== 0 && !horizontal.includes(k)) {
+                matrix[i][j] = k;
+                isChange = true;
+                break;
+              }
             }
           }
         }
       }
       checkMatrix();
-      if (i === 8 && !matrixSolved && stepsToEndChecking < 100) {
+      if (i === 8 && !matrixSolved && stepsToEndChecking < 15) {
         i = 0;
         stepsToEndChecking++;
       }
     }
   }
-  if (!matrixSolved && stepsToEndChecking < 100) {
+  if (!matrixSolved && stepsToEndChecking < 15) {
     getSolution();
   }
   console.log(stepsToEndChecking)
   return matrix;
 }
+
