@@ -1,9 +1,8 @@
 module.exports = function solveSudoku(matrix) {
-  const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-
   let matrixSolved = false;
-  function checkMatrix() {
+  let stepsToEndChecking = 0;
+
+  function checkMatrix() {                   // проверяем всё заполнено или нет
     let checkingArr = null;
     for (let i = 0; i < matrix.length; i++) {
       for (let j = 0; j < matrix.length; j++) {
@@ -17,7 +16,7 @@ module.exports = function solveSudoku(matrix) {
     }
   }
 
-  function getSquare(row, col) {
+  function getSquare(row, col) {            // получаем подмассивы чисел
     let square = [];
     function fillSquare(r, c) {
       for (let i = r; i < r + 3; i++) {
@@ -57,18 +56,15 @@ module.exports = function solveSudoku(matrix) {
     return [...firstPart, ...reverseMid, ...secondPart];
   }
 
-  function getSolution() {
+  function getSolution() {                  // основное решение
     let isChange = false;
     for (let i = 0; i < matrix.length; i++) {
-
-      if (isChange) {
+      if (isChange) {                       // проверяем есл было найдено число, начинаем сначала  
         i = 0;
         isChange = false;
       }
 
       for (let j = 0; j < matrix.length; j++) {
-
-
         if (matrix[i][j] === 0) {
           const getVertical = (col, line) => matrix.forEach(subArr => line.push(subArr[col]));
           let horizontal = matrix[i];
@@ -79,8 +75,7 @@ module.exports = function solveSudoku(matrix) {
           let currentVerticalLength = vertical.filter(e => e !== 0).length;
           let currentHorizontalLength = horizontal.filter(e => e !== 0).length;
 
-          // находим индекс текущего элемента в блоке
-          function findCurrentIndex() {
+          function findCurrentIndex() {               // находим индекс текущего элемента в подмассиве
             matrix[i][j] = 555;
             currentSquare = getSquare(i, j);
             let idxOfEl = currentSquare.findIndex(el => el === 555);
@@ -89,9 +84,7 @@ module.exports = function solveSudoku(matrix) {
             return idxOfEl;
           }
 
-
-          for (let k = 1; k <= DIGITS.length; k++) {
-
+          for (let k = 1; k <= 9; k++) {      // проверки в зависимости от положения числа в подмассиве
             if ((!horizontal.includes(k) && !vertical.includes(k) && !currentSquare.includes(k))
               && (currentSquareLength === 8 || currentVerticalLength === 8 || currentHorizontalLength === 8)) {
               matrix[i][j] = k;
@@ -100,9 +93,8 @@ module.exports = function solveSudoku(matrix) {
             }
 
             let idxOfEl = findCurrentIndex();
-            let fuseBox;  // только для первых проходок когда не достаточно путей (трохи костыль)
+
             if (idxOfEl === 0) {
-              fuseBox = true
               let v2 = [];
               let v3 = [];
               let h2 = matrix[i + 1];
@@ -117,44 +109,12 @@ module.exports = function solveSudoku(matrix) {
                 && !currentSquare.includes(k)
                 && !vertical.includes(k)
                 && !horizontal.includes(k)
-                && (currentSquareLength >= 5 && fuseBox)) {
-                matrix[i][j] = k;
-                isChange = true;
-                fuseBox = false;
-                break;
-              }
-
-              if ((v2.includes(k) || currentSquare[1] !== 0)
-                && (v3.includes(k) || currentSquare[2] !== 0)
-                && (h2.includes(k) || currentSquare[5] !== 0)
-                && (h3.includes(k) || currentSquare[6] !== 0)
-                && !currentSquare.includes(k)
-                && !vertical.includes(k)
-                && !horizontal.includes(k)
-                && !fuseBox) {
-                matrix[i][j] = k;
-                isChange = true;
-                fuseBox = false;
-                break;
-              }
-
-              if ((v2.includes(k) || currentSquare[1] !== 0)
-                && (v3.includes(k) || currentSquare[2] !== 0)
-                && (h2.includes(k) || currentSquare[5] !== 0)
-                && (h3.includes(k) || currentSquare[6] !== 0)
-                && !currentSquare.includes(k)
-                && !vertical.includes(k)
-                && !horizontal.includes(k)
                 && h4 !== undefined) {
                 matrix[i][j] = k;
                 isChange = true;
-                fuseBox = false;
                 break;
               }
-
-
             }
-
             if (idxOfEl === 1) {
               let v2 = [];
               let v3 = [];
@@ -175,7 +135,6 @@ module.exports = function solveSudoku(matrix) {
               }
 
             }
-
             if (idxOfEl === 2) {
               let v2 = [];
               let v3 = [];
@@ -195,7 +154,6 @@ module.exports = function solveSudoku(matrix) {
                 break;
               }
             }
-
             if (idxOfEl === 3) {
               let v2 = [];
               let v3 = [];
@@ -215,7 +173,6 @@ module.exports = function solveSudoku(matrix) {
                 break;
               }
             }
-
             if (idxOfEl === 4) {
               let v2 = [];
               let v3 = [];
@@ -235,7 +192,6 @@ module.exports = function solveSudoku(matrix) {
                 break;
               }
             }
-
             if (idxOfEl === 5) {
               let v2 = [];
               let v3 = [];
@@ -312,22 +268,19 @@ module.exports = function solveSudoku(matrix) {
                 break;
               }
             }
-
-
           }
-
         }
-
       }
       checkMatrix();
-      if (i === 8 && !matrixSolved) {
+      if (i === 8 && !matrixSolved && stepsToEndChecking < 100) {
         i = 0;
+        stepsToEndChecking++;
       }
     }
   }
-
-  if (!matrixSolved) {
+  if (!matrixSolved && stepsToEndChecking < 100) {
     getSolution();
   }
+  console.log(stepsToEndChecking)
   return matrix;
 }
